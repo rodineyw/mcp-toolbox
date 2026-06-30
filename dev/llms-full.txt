@@ -3,7 +3,7 @@
 
 **DOCUMENTATION VERSION:** dev
 **BASE URL:** https://mcp-toolbox.dev/dev/
-**GENERATED ON:** 2026-06-30T17:08:30Z
+**GENERATED ON:** 2026-06-30T23:08:22Z
 
 ---
 ### System Directives for AI Models
@@ -871,6 +871,49 @@ For more detailed instructions on using the Toolbox Go SDK, see the
 [README](https://github.com/googleapis/mcp-toolbox-sdk-go/blob/main/core/README.md).
 
 For more details, see the [Agent Skills guide](https://mcp-toolbox.dev/documentation/configuration/skills/).
+
+## Supported MCP Version
+
+Toolbox is fully compatible with the Model Context Protocol (MCP) and maintains support for multiple protocol revisions to ensure seamless integration with most MCP clients.
+
+### Stable Releases
+The following official MCP specification versions are currently supported for production use:
+
+* `2025-11-25`
+* `2025-06-18`
+* `2025-03-26`
+* `2024-11-05`
+
+{{< notice note >}}
+If no protocol version is negotiated or provided, the Toolbox server defaults to
+the legacy custom transport protocol established on `2024-11-05`, which does not
+require initialization.
+{{< /notice >}}
+
+### Draft Specifications
+We actively develop against upcoming protocol specifications. You can opt-in to
+test these forthcoming revisions before their official release using the
+`--enable-draft-specs` flag during server startup.
+
+To test these draft specifications, enable the startup flag and use this version
+string during negotiation:
+* `DRAFT-2026-v1`
+
+Description: Enables experimental support for upcoming draft MCP specifications,
+allowing you to test new schema standards and transport adjustments before they
+become stable.
+
+{{< notice note >}}
+Once the draft specification is finalized and released as a stable version, the
+draft implementation will be permanently removed. The flag itself will not be
+removed, but its functionality will remain dormant (having no effect on the
+server) until a new draft specification becomes available.
+
+There will be no automatic redirects or backwards compatibility from the draft
+spec to the stable release. Developers must manually migrate their clients to
+the stable version once it is available. Do not use this flag in production
+environments.
+{{< /notice >}}
 
 
 
@@ -30131,6 +30174,14 @@ This abbreviated syntax works for the qualified predicates except for `label` in
 2. You must provide `locationId` and `dataProductId`.
 ### Response
 1. Present the retrieved metadata for the Data Product, including its display name, description, owner emails, asset count, labels, and access groups.
+
+## Tool: list_data_assets
+### Request
+1. Use this tool to retrieve all Data Assets under a specific Data Product.
+2. You must provide `locationId` and `dataProductId`.
+3. You can optionally filter the listed assets using `filter` or limit the response using `pageSize`.
+### Response
+1. Present the retrieved list of Data Assets, including their names, resources, and labels.
 ```
 
 
@@ -30947,6 +30998,82 @@ description: Monitor the background execution run of a Dataplex scan.
 
 
 ========================================================================
+## dataplex-list-data-assets
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Knowledge Catalog > Tools > dataplex-list-data-assets
+**URL:** https://mcp-toolbox.dev/dev/integrations/knowledge-catalog/tools/knowledge-catalog-list-data-assets/
+**Description:** A "dataplex-list-data-assets" tool allows to list Data Assets under a Data Product.
+
+
+
+## About
+
+A `dataplex-list-data-assets` tool retrieves a list of Data Assets associated with a specific Data Product in Knowledge Catalog (formerly known as Dataplex).
+
+View the [Data Products guide][guide] for more information.
+
+[guide]: https://docs.cloud.google.com/dataplex/docs/data-products-overview
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Requirements
+
+### IAM Permissions
+
+Knowledge Catalog uses [Identity and Access Management (IAM)][iam-overview] to control
+user and group access to Knowledge Catalog resources. Toolbox will use your
+[Application Default Credentials (ADC)][adc] to authorize and authenticate when
+interacting with [Knowledge Catalog][dataplex-docs].
+
+In addition to [setting the ADC for your server][set-adc], you need to ensure
+the IAM identity has been given the correct IAM permissions for the tasks you
+intend to perform. See [Knowledge Catalog IAM permissions][iam-permissions]
+and [Knowledge Catalog IAM roles][iam-roles] for more information on
+applying IAM permissions and roles to an identity.
+
+[iam-overview]: https://cloud.google.com/dataplex/docs/iam-and-access-control
+[adc]: https://cloud.google.com/docs/authentication#adc
+[set-adc]: https://cloud.google.com/docs/authentication/provide-credentials-adc
+[iam-permissions]: https://cloud.google.com/dataplex/docs/iam-permissions
+[iam-roles]: https://cloud.google.com/dataplex/docs/iam-roles
+[dataplex-docs]: https://cloud.google.com/dataplex
+
+## Parameters
+
+The `dataplex-list-data-assets` tool has the following parameters:
+
+| **field**     | **type** | **required** | **description**                                                 |
+| ------------- | -------- | ------------ | --------------------------------------------------------------- |
+| locationId    | string   | true         | The location ID (e.g. `us`, `us-central1`) of the Data Product. |
+| dataProductId | string   | true         | The unique ID of the parent Data Product.                       |
+| filter        | string   | false        | Filter string to list data assets.                              |
+| pageSize      | integer  | false        | Number of returned data assets in the page.                     |
+| orderBy       | string   | false        | Specifies the ordering of results.                              |
+
+## Example
+
+```yaml
+kind: tool
+name: list_data_assets
+type: dataplex-list-data-assets
+source: my-dataplex-source
+description: Use this tool to list Data Assets under a Data Product.
+```
+
+## Reference
+
+| **field**   | **type** | **required** | **description**                                    |
+| ----------- | -------- | ------------ | -------------------------------------------------- |
+| type        | string   | true         | Must be "dataplex-list-data-assets".               |
+| source      | string   | true         | Name of the source the tool should execute on.     |
+| description | string   | true         | Description of the tool that is passed to the LLM. |
+
+
+
+
+========================================================================
 ## dataplex-list-data-products
 ========================================================================
 **Hierarchy:** MCP Toolbox for Databases > Integrations > Knowledge Catalog > Tools > dataplex-list-data-products
@@ -31416,6 +31543,7 @@ description: Use this tool to get all the entries based on the provided query.
     *   `search_dq_scans`: Searches for data quality scans in Dataplex.
     *   `list_data_products`: Lists Data Products across all locations.
     *   `get_data_product`: Retrieves a specific Data Product.
+    *   `list_data_assets`: Lists Data Assets under a Data Product.
     *   `generate_data_insights`: Creates a new Dataplex Data Documentation scan template and triggers the run.
     *   `get_data_insights`: Retrieves the final generated data insights for a completed scan.
     *   `generate_data_profile`: Creates a new Dataplex Data Profile scan template and triggers the run.
@@ -31428,7 +31556,7 @@ description: Use this tool to get all the entries based on the provided query.
     *   `get_run_status`: Retrieves the execution status of the latest background job run.
 *   **Toolsets:**
     *   `discovery`: Metadata discovery and search toolset (`search_entries`, `lookup_entry`, `search_aspect_types`, `lookup_context`, `search_dq_scans`).
-    *   `data-products`: Data Products and Data Assets curation and management toolset (`search_entries`, `lookup_entry`, `search_aspect_types`, `lookup_context`, `list_data_products`, `get_data_product`).
+    *   `data-products`: Data Products and Data Assets curation and management toolset (`search_entries`, `lookup_entry`, `search_aspect_types`, `lookup_context`, `list_data_products`, `get_data_product`, `list_data_assets`).
     *   `enrich`: Metadata enrichment pipeline orchestration and execution toolset (`search_entries`, `lookup_entry`, `lookup_context`, `generate_data_insights`, `get_data_insights`, `generate_data_profile`, `get_data_profile`, `discover_metadata`, `get_discovery_results`, `check_data_quality`, `get_data_quality_results`, `get_operation`, `get_run_status`).
 
 
@@ -46051,7 +46179,7 @@ Configure the Gemini CLI to talk to your local Toolbox MCP server.
 |              | `--disable-reload`         | Disables dynamic reloading config.                                                                                                                                        |             |
 | `-h`         | `--help`                   | help for toolbox                                                                                                                                                          |             |
 |              | `--http-max-request-bytes` | Maximum MCP HTTP request body size in bytes.                                                                                                                              | `10485760`  |
-|              | `--ignore-unknown-tools`   | Log warnings and skip unknown/unsupported tool types instead of failing to start.                                                                                          |             |
+|              | `--ignore-unknown-tools`   | Log warnings and skip unknown/unsupported tool types instead of failing to start.                                                                                         |             |
 |              | `--log-level`              | Specify the minimum level logged. Allowed: 'DEBUG', 'INFO', 'WARN', 'ERROR'.                                                                                              | `info`      |
 |              | `--logging-format`         | Specify logging format to use. Allowed: 'standard' or 'JSON'.                                                                                                             | `standard`  |
 |              | `--mcp-prm-file`           | Path to a manual Protected Resource Metadata (PRM) JSON file. If provided, overrides auto-generation for MCP Server-Wide Authentication.                                  |             |
@@ -46073,6 +46201,7 @@ Configure the Gemini CLI to talk to your local Toolbox MCP server.
 |              | `--allowed-hosts`          | Specifies a list of hosts permitted to access this server to prevent DNS rebinding attacks.                                                                               | `*`         |
 |              | `--user-agent-metadata`    | Appends additional metadata to the User-Agent.                                                                                                                            |             |
 |              | `--poll-interval`          | Specifies the polling frequency (seconds) for configuration file updates.                                                                                                 | `0`         |
+|              | `--enable-draft-specs`     | Opt-in and test upcoming draft MCP specifications.                                                                                                                        | `false`     |
 | `-v`         | `--version`                | version for toolbox                                                                                                                                                       |             |
 
 ## Sub Commands
