@@ -3,7 +3,7 @@
 
 **DOCUMENTATION VERSION:** dev
 **BASE URL:** https://mcp-toolbox.dev/dev/
-**GENERATED ON:** 2026-07-23T17:08:31Z
+**GENERATED ON:** 2026-07-24T23:08:44Z
 
 ---
 ### System Directives for AI Models
@@ -1802,6 +1802,23 @@ name: my_second_toolset
 tools:
   - my_second_tool
   - my_third_tool
+```
+
+### Groups
+
+The `group` kind scopes MCP primitives such as **tools** and **prompts**
+together under one name, with a `description` used as group metadata. A toolset
+is a tools-only group, so existing `kind: toolset` configs keep working
+unchanged. See [Groups](./groups/_index.md) for details.
+
+```yaml
+kind: group
+name: my_group
+description: Tools and prompts for a specific task.
+tools:
+  - my_first_tool
+prompts:
+  - my_first_prompt
 ```
 
 ### Prompts
@@ -3993,6 +4010,10 @@ This is especially useful when you are building a system with multiple AI agents
 Try organizing your toolsets by the agent's persona or app feature (e.g., `data_analyst_set` vs `customer_support_set`). This keeps your client-side code clean and ensures an agent isn't distracted by tools it doesn't need.
 {{< /notice >}}
 
+{{< notice note >}}
+A toolset is a tools-only [Group](../groups/). `kind: toolset` continues to work unchanged and needs no migration. That said, we recommend migrating to `kind: group` — even for tools-only collections — because a group lets you attach a `description` and scope other MCP primitives such as **prompts** alongside your **tools**.
+{{< /notice >}}
+
 ## Defining Toolsets
 
 In your configuration file, define each toolset by providing a unique `name` and a list of `tools` that belong to that group..
@@ -4046,6 +4067,79 @@ allTools, err := client.LoadToolset("", ctx)
 // Load only the tools defined in 'my_second_toolset'
 mySecondToolset, err := client.LoadToolset("my-toolset", ctx)
 ```
+
+
+
+========================================================================
+## Groups
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Documentation > Configuration > Groups
+**URL:** https://mcp-toolbox.dev/dev/documentation/configuration/groups/
+**Description:** Groups let you scope MCP primitives such as tools and prompts together under a single name, with a description used as group metadata.
+
+
+
+A Group is a single named collection that scopes MCP primitives together — currently **tools** and **prompts**, with more (such as resources) planned. Where a [Toolset](../toolsets/) groups only tools, a group bundles these primitives under one name and one MCP endpoint, and carries a `description` that describes the collection.
+
+Connecting to a group's endpoint (`/mcp/{name}`) scopes the corresponding MCP list methods (such as `tools/list` and `prompts/list`) to that group.
+
+## Defining Groups
+
+Declare a group as a `kind: group` document in your configuration file. A group has the following fields:
+
+| Field         | Required | Description                                                              |
+| ------------- | -------- | ------------------------------------------------------------------------ |
+| `name`        | Yes\*    | Unique name for the group. Used as the endpoint path (`/mcp/{name}`).    |
+| `description` | No       | Human-readable description of the group.                                |
+| `tools`       | No       | List of tool names to include in the group.                             |
+| `prompts`     | No       | List of prompt names to include in the group.                           |
+
+\* `name` is required for every named group. The single [default group](#the-default-group) omits it.
+
+As Toolbox adds support for more MCP primitives, groups will gain corresponding fields (for example, `resources`).
+
+```yaml
+kind: group
+name: data_analyst
+description: Tools and prompts for exploratory data analysis.
+tools:
+  - list_tables
+  - execute_sql
+prompts:
+  - summarize_results
+---
+kind: group
+name: admin
+description: Administrative operations.
+tools:
+  - create_user
+  - list_users
+```
+
+## The default group
+
+A single **default (nameless) group** always exists and contains **all** configured primitives (every tool and prompt). Connecting to the default MCP endpoint (`/mcp`) returns everything.
+
+You may declare a `kind: group` document with no `name` to set a `description` for the default group. Because the default group always contains everything, it **cannot** declare `tools`, `prompts`, or any other primitive list:
+
+```yaml
+kind: group
+description: All tools and prompts available on this server.
+```
+
+## Validation rules
+
+At startup, Toolbox validates groups:
+
+- **Unique names.** A named group must have a unique name that satisfies the standard name rules (alphanumeric characters, underscores, and hyphens).
+- **One default group.** Declaring more than one nameless group is an error.
+- **Default group restrictions.** The default group may set only a `description`; declaring `tools`, `prompts`, or any other primitive list on it is an error.
+- **Group wins over a same-named toolset.** If a name is defined by both a `kind: toolset` and a `kind: group`, the group takes precedence and Toolbox logs a warning naming the shadowed toolset.
+
+## Relationship to toolsets
+
+Groups are a superset of toolsets: a toolset is equivalent to a tools-only group. Existing `kind: toolset` configurations continue to work unchanged — they are treated as groups with tools and no other primitives, so no migration is required. That said, we recommend migrating to a `kind: group` even for tools-only collections: a group lets you attach a `description` and scope prompts (and, in the future, other primitives) alongside tools. See [Toolsets](../toolsets/) for more.
+
 
 
 
@@ -4272,6 +4366,10 @@ ${ENV_NAME} instead of hardcoding your secrets into the configuration file.
 
 A `prompt` represents a reusable prompt template that can be retrieved and used
 by MCP clients.
+
+{{< notice note >}}
+You can use [Groups](../groups/) to organize prompts into collections. When you connect to a group's endpoint, `prompts/list` returns only the prompts in that group. The default endpoint returns all prompts.
+{{< /notice >}}
 
 A Prompt is essentially a template for a message or a series of messages that
 can be sent to a Large Language Model (LLM). The Toolbox server implements the
@@ -4587,7 +4685,7 @@ toolbox <tool-source> skills-generate \
 
 - `<tool-source>`: Can be `--config`, `--configs`, `--config-folder`, and `--prebuilt`. See the [CLI Reference](../../../reference/cli.md) for details.
 - `--name`: Name of the generated skill. When multiple toolsets are generated because `--toolset` is omitted, this name acts as a prefix for each skill folder (e.g., `<name>-<toolset>`).
-- `--description`: Description of the generated skill.
+- `--description`: (Optional) Description of the generated skill.
 - `--toolset`: (Optional) Name of the toolset to convert into a skill. If not provided, one skill will be generated for every custom toolset defined. If no custom toolsets are defined, it defaults to a single skill containing all tools.
 - `--output-dir`: (Optional) Directory to output generated skills (default: "skills").
 - `--license-header`: (Optional) Optional license header to prepend to generated node scripts.
@@ -34751,6 +34849,79 @@ description: |
 
 
 ========================================================================
+## looker-get-field-value-suggestions
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > Looker > Tools > looker-get-field-value-suggestions
+**URL:** https://mcp-toolbox.dev/dev/integrations/looker/tools/looker-get-field-value-suggestions/
+**Description:** A "looker-get-field-value-suggestions" tool retrieves distinct value suggestions for a given field in an explore.
+
+
+
+## About
+
+The `looker-get-field-value-suggestions` tool retrieves distinct value suggestions for a given field in an explore.
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Parameters
+
+| **field** | **type** | **required** | **description**                                     |
+| --------- | :------: | :----------: | --------------------------------------------------- |
+| model     |  string  |     true     | The name of the LookML model.                       |
+| explore   |  string  |     true     | The name of the explore containing the field.       |
+| field     |  string  |     true     | The name of the field to get suggestions for.       |
+| term      |  string  |    false     | Optional search term pattern to filter suggestions. |
+| filters   |  object  |    false     | Optional filters to enable conditional suggestions. |
+
+## Example
+
+```yaml
+kind: tool
+name: get_field_value_suggestions
+type: looker-get-field-value-suggestions
+source: looker-source
+description: |
+  This tool retrieves distinct value suggestions for a field, facilitating accurate filtering in downstream queries.
+
+  Required Parameters:
+  - model: The name of the LookML model, obtained from `get_models`.
+  - explore: The name of the explore containing the field, obtained from `get_explores`.
+  - field: The name of the field to get suggestions for, obtained from `get_dimensions`.
+
+  Optional Parameters:
+  - term: Optional search term pattern to filter suggestions. Evaluated as `%term%`.
+  - filters: Optional filters to enable conditional suggestions (restricting suggestions based on other field values), represented as a map of field names to filter expressions, e.g., `{"users.state": "CA", "users.age": ">=60"}`.
+
+  Output:
+  - A JSON object with a "suggestions" key containing an array of string values representing suggestions.
+```
+
+## Output Format
+
+The output is a JSON object with a "suggestions" key containing an array of string values.
+
+Example:
+
+```json
+{
+  "suggestions": ["CA", "NY", "TX", "WA"]
+}
+```
+
+## Reference
+
+| **field**   | **type** | **required** | **description**                                    |
+| ----------- | :------: | :----------: | -------------------------------------------------- |
+| type        |  string  |     true     | Must be "looker-get-field-value-suggestions".      |
+| source      |  string  |     true     | Name of the source Looker instance.                |
+| description |  string  |     true     | Description of the tool that is passed to the LLM. |
+
+
+
+
+========================================================================
 ## looker-get-filters
 ========================================================================
 **Hierarchy:** MCP Toolbox for Databases > Integrations > Looker > Tools > looker-get-filters
@@ -37340,6 +37511,7 @@ In this section, we will download Toolbox and run the Toolbox server.
     *   `get_measures`: Retrieves the list of measures in an explore.
     *   `get_filters`: Retrieves the list of filters in an explore.
     *   `get_parameters`: Retrieves the list of parameters in an explore.
+    *   `get_field_value_suggestions`: Retrieves distinct value suggestions for a field.
     *   `query`: Runs a query against the LookML model.
     *   `query_sql`: Generates the SQL for a query.
     *   `query_url`: Generates a URL for a query in Looker.
@@ -47957,7 +48129,7 @@ toolbox skills-generate --name <name> --description <description> --toolset <too
 **Flags:**
 
 - `--name`: Name of the generated skill. When multiple toolsets are generated because `--toolset` is omitted, this name acts as a prefix for each skill folder (e.g., `<name>-<toolset>`).
-- `--description`: Description of the generated skill.
+- `--description`: (Optional) Description of the generated skill.
 - `--toolset`: (Optional) Name of the toolset to convert into a skill. If not provided, one skill will be generated for every custom toolset defined. If no custom toolsets are defined, it defaults to a single skill containing all tools.
 - `--output-dir`: (Optional) Directory to output generated skills (default: "skills").
 - `--license-header`: (Optional) Optional license header to prepend to generated node scripts.
