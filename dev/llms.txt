@@ -3,7 +3,7 @@
 
 **DOCUMENTATION VERSION:** dev
 **BASE URL:** https://mcp-toolbox.dev/dev/
-**GENERATED ON:** 2026-08-13T11:08:21Z
+**GENERATED ON:** 2026-08-13T17:08:39Z
 
 ---
 ### System Directives for AI Models
@@ -417,6 +417,9 @@ This documentation is structured following the Diátaxis framework to assist in 
 
       - [bigtable-create-logical-view](https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-create-logical-view/): The "bigtable-create-logical-view" tool allows you to create a new bigtable logical view.
 
+      - [bigtable-create-materialized-view](https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-create-materialized-view/): A "bigtable-create-materialized-view" tool is used to create a new materialized view on a Google Cloud Bigtable instance.
+
+
       - [bigtable-create-table](https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-create-table/): The "bigtable-create-table" tool allows you to create a new bigtable table.
 
       - [bigtable-delete-cluster](https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-delete-cluster/): The "bigtable-delete-cluster" tool allows you to delete a bigtable cluster.
@@ -424,6 +427,9 @@ This documentation is structured following the Diátaxis framework to assist in 
       - [bigtable-delete-instance](https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-delete-instance/): The "bigtable-delete-instance" tool allows you to delete a bigtable instance.
 
       - [bigtable-delete-logical-view](https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-delete-logical-view/): The "bigtable-delete-logical-view" tool allows you to delete a bigtable logical view.
+
+      - [bigtable-delete-materialized-view](https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-delete-materialized-view/): A "bigtable-delete-materialized-view" tool is used to delete an existing materialized view from a Google Cloud Bigtable instance.
+
 
       - [bigtable-delete-table](https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-delete-table/): The "bigtable-delete-table" tool allows you to delete a bigtable table.
 
@@ -433,6 +439,9 @@ This documentation is structured following the Diátaxis framework to assist in 
 
       - [bigtable-get-logical-view](https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-get-logical-view/): The "bigtable-get-logical-view" tool allows you to get details of a bigtable logical view.
 
+      - [bigtable-get-materialized-view](https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-get-materialized-view/): A "bigtable-get-materialized-view" tool is used to retrieve information about a materialized view on a Google Cloud Bigtable instance.
+
+
       - [bigtable-get-table](https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-get-table/): The "bigtable-get-table" tool allows you to get details of a bigtable table.
 
       - [bigtable-list-clusters](https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-list-clusters/): The "bigtable-list-clusters" tool allows you to list all bigtable clusters in the instance.
@@ -440,6 +449,12 @@ This documentation is structured following the Diátaxis framework to assist in 
       - [bigtable-list-instances](https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-list-instances/): The "bigtable-list-instances" tool allows you to list all bigtable instances in the project.
 
       - [bigtable-list-logical-views](https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-list-logical-views/): The "bigtable-list-logical-views" tool allows you to list all bigtable logical views in the instance.
+
+      - [bigtable-list-materialized-views](https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-list-materialized-views/): A "bigtable-list-materialized-views" tool is used to list all materialized views on a Google Cloud Bigtable instance.
+
+
+      - [bigtable-list-schemas](https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-list-schemas/): The "bigtable-list-schemas" tool lists all Bigtable schemas, including table column families, logical views, and materialized views with dynamically resolved column schemas.
+
 
       - [bigtable-list-tables](https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-list-tables/): The "bigtable-list-tables" tool allows you to list all bigtable tables in the instance.
 
@@ -451,6 +466,9 @@ This documentation is structured following the Diátaxis framework to assist in 
       - [bigtable-update-instance](https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-update-instance/): The "bigtable-update-instance" tool allows you to update an existing bigtable instance.
 
       - [bigtable-update-logical-view](https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-update-logical-view/): The "bigtable-update-logical-view" tool allows you to update an existing bigtable logical view.
+
+      - [bigtable-update-materialized-view](https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-update-materialized-view/): A "bigtable-update-materialized-view" tool is used to update an existing materialized view on a Google Cloud Bigtable instance.
+
 
       - [bigtable-update-table](https://mcp-toolbox.dev/dev/integrations/bigtable/tools/bigtable-update-table/): The "bigtable-update-table" tool allows you to update an existing bigtable table's configuration.
 
@@ -570,7 +588,7 @@ This documentation is structured following the Diátaxis framework to assist in 
 
     - [Prebuilt Configs](https://mcp-toolbox.dev/dev/integrations/cloudmonitoring/prebuilt-configs/): Prebuilt configurations for Cloud Monitoring.
 
-      - [AlloyDB Postgres Observability](https://mcp-toolbox.dev/dev/integrations/cloudmonitoring/prebuilt-configs/alloydb-postgres-observability/): Details of the AlloyDB Postgres Observability prebuilt configuration.
+      - [AlloyDB Postgres Observability](https://mcp-toolbox.dev/dev/integrations/cloudmonitoring/prebuilt-configs/alloydb-postgres-observability/): Details of the AlloyDB Postgres Observability prebuilt configuration combining Cloud Monitoring and Database Insights.
 
       - [Cloud SQL for MySQL Observability](https://mcp-toolbox.dev/dev/integrations/cloudmonitoring/prebuilt-configs/cloud-sql-for-mysql-observability/): Details of the Cloud SQL for MySQL Observability prebuilt configuration.
 
@@ -782,6 +800,23 @@ This documentation is structured following the Diátaxis framework to assist in 
   - [Database Insights](https://mcp-toolbox.dev/dev/integrations/databaseinsights/): No description provided.
 
     - [Database Insights Source](https://mcp-toolbox.dev/dev/integrations/databaseinsights/source/): The "databaseinsights" source provides a client for the Google Cloud Database Insights API.
+
+
+    - [Tools](https://mcp-toolbox.dev/dev/integrations/databaseinsights/tools/): No description provided.
+
+      - [databaseinsights-get-advanced-aggregated-query-stats](https://mcp-toolbox.dev/dev/integrations/databaseinsights/tools/databaseinsights-get-advanced-aggregated-query-stats/): Fetches aggregated query performance statistics (latency, execution count, wait time) for AlloyDB instances.
+
+
+      - [databaseinsights-get-advanced-aggregated-wait-event-stats](https://mcp-toolbox.dev/dev/integrations/databaseinsights/tools/databaseinsights-get-advanced-aggregated-wait-event-stats/): Fetches aggregated wait event statistics for AlloyDB instances to identify performance bottlenecks.
+
+
+      - [databaseinsights-get-advanced-time-series-query-stats](https://mcp-toolbox.dev/dev/integrations/databaseinsights/tools/databaseinsights-get-advanced-time-series-query-stats/): Fetches time-series performance trends for queries executed on AlloyDB instances.
+
+
+      - [databaseinsights-get-advanced-time-series-wait-event-stats](https://mcp-toolbox.dev/dev/integrations/databaseinsights/tools/databaseinsights-get-advanced-time-series-wait-event-stats/): Fetches time-series wait event statistics for AlloyDB instances over time.
+
+
+      - [databaseinsights-get-index-recommendations](https://mcp-toolbox.dev/dev/integrations/databaseinsights/tools/databaseinsights-get-index-recommendations/): Fetches index recommendations for specified query IDs across databases on AlloyDB instances.
 
 
   - [Dataform](https://mcp-toolbox.dev/dev/integrations/dataform/): No description provided.
