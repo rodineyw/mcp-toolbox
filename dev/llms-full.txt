@@ -3,7 +3,7 @@
 
 **DOCUMENTATION VERSION:** dev
 **BASE URL:** https://mcp-toolbox.dev/dev/
-**GENERATED ON:** 2026-08-27T17:08:28Z
+**GENERATED ON:** 2026-08-28T05:08:21Z
 
 ---
 ### System Directives for AI Models
@@ -219,7 +219,7 @@ To install Toolbox as a binary on Linux (AMD64):
 
 ```sh
 # see releases page for other versions
-export VERSION=1.9.0
+export VERSION=1.10.0
 curl -L -o toolbox https://storage.googleapis.com/mcp-toolbox-for-databases/v$VERSION/linux/amd64/toolbox
 chmod +x toolbox
 ```
@@ -230,7 +230,7 @@ To install Toolbox as a binary on macOS (Apple Silicon):
 
 ```sh
 # see releases page for other versions
-export VERSION=1.9.0
+export VERSION=1.10.0
 curl -L -o toolbox https://storage.googleapis.com/mcp-toolbox-for-databases/v$VERSION/darwin/arm64/toolbox
 chmod +x toolbox
 ```
@@ -241,7 +241,7 @@ To install Toolbox as a binary on macOS (Intel):
 
 ```sh
 # see releases page for other versions
-export VERSION=1.9.0
+export VERSION=1.10.0
 curl -L -o toolbox https://storage.googleapis.com/mcp-toolbox-for-databases/v$VERSION/darwin/amd64/toolbox
 chmod +x toolbox
 ```
@@ -252,7 +252,7 @@ To install Toolbox as a binary on Windows (Command Prompt):
 
 ```cmd
 :: see releases page for other versions
-set VERSION=1.9.0
+set VERSION=1.10.0
 curl -o toolbox.exe "https://storage.googleapis.com/mcp-toolbox-for-databases/v%VERSION%/windows/amd64/toolbox.exe"
 ```
 
@@ -262,7 +262,7 @@ To install Toolbox as a binary on Windows (PowerShell):
 
 ```powershell
 # see releases page for other versions
-$VERSION = "1.9.0"
+$VERSION = "1.10.0"
 curl.exe -o toolbox.exe "https://storage.googleapis.com/mcp-toolbox-for-databases/v$VERSION/windows/amd64/toolbox.exe"
 ```
 
@@ -272,7 +272,7 @@ To install Toolbox as a binary on Windows ARM64 (Command Prompt):
 
 ```cmd
 :: see releases page for other versions
-set VERSION=1.9.0
+set VERSION=1.10.0
 curl -o toolbox.exe "https://storage.googleapis.com/mcp-toolbox-for-databases/v%VERSION%/windows/arm64/toolbox.exe"
 ```
 
@@ -282,7 +282,7 @@ To install Toolbox as a binary on Windows ARM64 (PowerShell):
 
 ```powershell
 # see releases page for other versions
-$VERSION = "1.9.0"
+$VERSION = "1.10.0"
 curl.exe -o toolbox.exe "https://storage.googleapis.com/mcp-toolbox-for-databases/v$VERSION/windows/arm64/toolbox.exe"
 ```
 
@@ -294,7 +294,7 @@ You can also install Toolbox as a container:
 
 ```sh
 # see releases page for other versions
-export VERSION=1.9.0
+export VERSION=1.10.0
 docker pull us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:$VERSION
 ```
 
@@ -313,7 +313,7 @@ To install from source, ensure you have the latest version of
 [Go installed](https://go.dev/doc/install), and then run the following command:
 
 ```sh
-go install github.com/googleapis/mcp-toolbox@v1.9.0
+go install github.com/googleapis/mcp-toolbox@v1.10.0
 ```
 
 {{% /tab %}}
@@ -1107,7 +1107,7 @@ In this section, we will download Toolbox, configure our tools in a
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, windows/amd64, or windows/arm64
-    curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.9.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.10.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -3633,6 +3633,45 @@ parameters:
     description: A map of user IDs to their scores. All scores must be integers.
     valueType: integer # This enforces the value type for all entries.
 ```
+
+### Secure Parameters
+
+Secure parameters are designed for sensitive runtime context (such as an end-user `customer_id`, tenant identifier, or session token) that **AI agents (LLMs) should not control or see** and that should not be transmitted in plain text through prompt completion requests, model context windows, or standard server logs.
+
+> **Note:** Secure parameters should be used for client-supplied runtime values (such as `customer_id` or end-user context). Database credentials (such as service account passwords or API keys) should be configured directly in the Data Source configuration rather than passed as per-request tool parameters.
+
+To configure a parameter as secure, set the `secure` field to `true` in your tool's parameter definition:
+
+```yaml
+kind: tool
+name: search_secure_data
+type: postgres-sql
+source: my-pg-instance
+statement: |
+  SELECT * FROM sessions WHERE customer_id = $1
+parameters:
+  - name: customer_id
+    type: string
+    description: Sensitive customer identifier supplied out-of-band by the calling application
+    secure: true
+```
+
+When a parameter is marked as `secure: true`, it will not be presented to the agent as a configurable parameter. Instead, it relies on the application to set the parameter. If an application fails to set the parameter before the tool is called, execution returns a tool error indicating that the required parameter was not provided.
+
+> **Note:** Secure parameters are always required and cannot be optional. A parameter cannot have `secure: true` alongside `authServices`, `default`, or `required: false`.
+
+Here is how you set a secure parameter with the Toolbox Python SDK:
+
+```python
+# Pass secure_params when loading or calling a tool via the Python SDK
+auth_tool = await toolbox.load_tool(
+    "search_secure_data",
+    secure_params={"customer_id": "cust_12345"}
+)
+result = await auth_tool()
+```
+
+> **Note:** Secure parameters require MCP protocol version `2026-07-28` and the `com.google.cloud/toolbox.v1` extension. For more details on extension capabilities and client requirements, see the [Extension README](https://github.com/googleapis/mcp-toolbox/blob/main/extensions/2026-07-28/README.md).
 
 ### Authenticated Parameters
 
@@ -11211,23 +11250,23 @@ After you install Looker in the MCP Store, resources and tools from the server a
 
 {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.9.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.10.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.9.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.10.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.9.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.10.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.9.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.10.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 
 {{< tab header="windows/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.9.0/windows/arm64/toolbox.exe
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.10.0/windows/arm64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -11717,23 +11756,23 @@ expose your developer assistant tools to a MySQL instance:
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.9.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.10.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.9.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.10.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.9.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.10.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.9.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.10.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 
 {{< tab header="windows/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.9.0/windows/arm64/toolbox.exe
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.10.0/windows/arm64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -12047,23 +12086,23 @@ expose your developer assistant tools to a Neo4j instance:
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.9.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.10.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.9.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.10.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.9.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.10.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.9.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.10.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 
 {{< tab header="windows/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.9.0/windows/arm64/toolbox.exe
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.10.0/windows/arm64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -12374,23 +12413,23 @@ to expose your developer assistant tools to an Oracle instance:
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.9.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.10.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.9.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.10.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.9.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.10.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.9.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.10.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 
 {{< tab header="windows/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.9.0/windows/arm64/toolbox.exe
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.10.0/windows/arm64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -12723,23 +12762,23 @@ Omni](https://cloud.google.com/alloydb/omni/docs/overview).
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.9.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.10.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.9.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.10.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.9.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.10.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.9.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.10.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 
 {{< tab header="windows/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.9.0/windows/arm64/toolbox.exe
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.10.0/windows/arm64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -13080,23 +13119,23 @@ instance:
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.9.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.10.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.9.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.10.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.9.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.10.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.9.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.10.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 
 {{< tab header="windows/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.9.0/windows/arm64/toolbox.exe
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.10.0/windows/arm64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -13410,23 +13449,23 @@ to expose your developer assistant tools to a SQLite instance:
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.9.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.10.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.9.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.10.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.9.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.10.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.9.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.10.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 
 {{< tab header="windows/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.9.0/windows/arm64/toolbox.exe
+curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.10.0/windows/arm64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -16138,6 +16177,7 @@ useClientOAuth: true
 | type           |  string  |     true     | Must be "alloydb-admin".                                                                                                                       |
 | defaultProject |  string  |     false    | The Google Cloud project ID to use for AlloyDB infrastructure tools.                                                                           |
 | useClientOAuth |  boolean |     false    | If true, the source will use client-side OAuth for authorization. Otherwise, it will use Application Default Credentials. Defaults to `false`. |
+| readOnly       |  boolean |     false    | When set to `true`, suppresses write-capable admin tools. Default: `false`.                                                                    |
 
 
 
@@ -16716,7 +16756,10 @@ maxRetries: 10
 
 ## AlloyDB Postgres Admin
 
-* `--prebuilt` value: `alloydb-postgres-admin`
+*   `--prebuilt` value: `alloydb-postgres-admin`
+*   **Environment Variables:**
+    *   `ALLOYDB_POSTGRES_PROJECT`: (Optional) The GCP project ID to use as the default for AlloyDB infrastructure tools.
+    *   `ALLOYDB_POSTGRES_READONLY`: (Optional) When set to `true`, suppresses write-capable admin tools (e.g., `create_cluster`, `create_instance`, `create_user`). Default: `false`.
 *   **Permissions:**
     *   **AlloyDB Viewer** (`roles/alloydb.viewer`) is required for `list` and
         `get` tools.
@@ -16893,6 +16936,7 @@ The interface is identical, so there's no additional configuration required on t
 | password  |  string  |    false     | Password of the Postgres user (e.g. "my-password"). Defaults to attempting IAM authentication if unspecified.            |
 | ipType    |  string  |    false     | IP Type of the AlloyDB instance; must be one of `public` or `private`. Default: `public`.                                |
 | sqlCommenter | boolean |  false     | Overrides the global `--sql-commenter` flag for this source. When set, it takes priority; when omitted, the global flag applies. |
+| readOnly  | boolean  |    false     | When set to `true`, enforces read-only execution at the database session level (`alloydb_session_read_only=locked`) and suppresses write-capable tools. Default: `false`. |
 
 
 
@@ -17471,6 +17515,7 @@ Run the Toolbox server, pointing to the `tools.yaml` file created earlier:
         user. Defaults to IAM authentication if unspecified.
     *   `ALLOYDB_POSTGRES_IP_TYPE`: (Optional) The IP type i.e. "Public" or
         "Private" (Default: Public).
+    *   `ALLOYDB_POSTGRES_READONLY`: (Optional) When set to `true`, enforces read-only execution at the database session level (`alloydb_session_read_only=locked`) and suppresses write-capable tools. Default: `false`.
 *   **Permissions:**
     *   **AlloyDB Client** (`roles/alloydb.client`) to connect to the instance.
     *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to
@@ -17812,6 +17857,7 @@ name: my-bigquery-source
 type: "bigquery"
 project: "my-project-id"
 # location: "US" # Optional: Specifies the location for query jobs.
+# readOnly: false # Optional: Enforces read-only mode across all tools (defaults writeMode to "blocked").
 # writeMode: "allowed" # One of: allowed, blocked, protected. Defaults to "allowed".
 # allowedDatasets: # Optional: Restricts tool access to a specific list of datasets.
 #   - "my_dataset_1"
@@ -17834,6 +17880,7 @@ type: "bigquery"
 project: "my-project-id"
 useClientOAuth: true
 # location: "US" # Optional: Specifies the location for query jobs.
+# readOnly: false # Optional: Enforces read-only mode across all tools (defaults writeMode to "blocked").
 # writeMode: "allowed" # One of: allowed, blocked, protected. Defaults to "allowed".
 # allowedDatasets: # Optional: Restricts tool access to a specific list of datasets.
 #   - "my_dataset_1"
@@ -17854,7 +17901,8 @@ useClientOAuth: true
 | type                      |  string  |     true     | Must be "bigquery".                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | project                   |  string  |     true     | Id of the Google Cloud project to use for billing and as the default project for BigQuery resources.                                                                                                                                                                                                                                                                                                                                                                                                                |
 | location                  |  string  |    false     | Specifies the location (e.g., 'us', 'asia-northeast1') in which to run the query job. This location must match the location of any tables referenced in the query. Defaults to the table's location or 'US' if the location cannot be determined. [Learn More](https://cloud.google.com/bigquery/docs/locations)                                                                                                                                                                                                    |
-| writeMode                 |  string  |    false     | Controls the write behavior for tools. `allowed` (default): All queries are permitted. `blocked`: Only `SELECT` statements are allowed for the `bigquery-execute-sql` tool. `protected`: Enables session-based execution where all tools associated with this source instance share the same [BigQuery session](https://cloud.google.com/bigquery/docs/sessions-intro). This allows for stateful operations using temporary tables (e.g., `CREATE TEMP TABLE`). For `bigquery-execute-sql`, `SELECT` statements can be used on all tables, but write operations are restricted to the session's temporary dataset. For tools like `bigquery-sql`, `bigquery-forecast`, and `bigquery-analyze-contribution`, the `writeMode` restrictions do not apply, but they will operate within the shared session. **Note:** The `protected` mode cannot be used with `useClientOAuth: true`. It is also not recommended for multi-user server environments, as all users would share the same session. A session is terminated automatically after 24 hours of inactivity or after 7 days, whichever comes first. A new session is created on the next request, and any temporary data from the previous session will be lost. |
+| readOnly                  | boolean  |    false     | Controls whether the source operates in read-only mode across Toolbox. Setting `readOnly: true` marks the source as read-only, coordinating with MCP read-only annotations and tool suppression, and defaults `writeMode` to `blocked` (or allows `protected`). If `writeMode` is also provided, it must be consistent with `readOnly` (`readOnly: true` with `blocked` or `protected`, `readOnly: false` with `allowed`), otherwise a startup configuration error is returned. |
+| writeMode                 |  string  |    false     | Controls the write behavior for tools. `allowed` (default): All queries are permitted. `blocked`: Enforces strict read-only mode, coordinating with MCP read-only annotations and tool suppression (suppresses write-capable tools during registration, while dynamic tools like `bigquery-execute-sql` dynamically report `readOnlyHint: true`), and allows only `SELECT` statements for execution. `protected`: Enables session-based execution where all tools associated with this source instance share the same [BigQuery session](https://cloud.google.com/bigquery/docs/sessions-intro). This allows for stateful operations using temporary tables (e.g., `CREATE TEMP TABLE`), while protecting permanent datasets from modification (also classified as read-only at the Toolbox layer). For `bigquery-execute-sql`, `SELECT` statements can be used on all tables, but write operations are restricted to the session's temporary dataset. For tools like `bigquery-sql`, `bigquery-forecast`, and `bigquery-analyze-contribution`, the `writeMode` restrictions do not apply, but they will operate within the shared session. **Note:** The `protected` mode cannot be used with `useClientOAuth: true`. It is also not recommended for multi-user server environments, as all users would share the same session. A session is terminated automatically after 24 hours of inactivity or after 7 days, whichever comes first. A new session is created on the next request, and any temporary data from the previous session will be lost. |
 | allowedDatasets           | []string |    false     | An optional list of dataset IDs that tools using this source are allowed to access. If provided, any tool operation attempting to access a dataset not in this list will be rejected. To enforce this, two types of operations are also disallowed: 1) Dataset-level operations (e.g., `CREATE SCHEMA`), and 2) operations where table access cannot be statically analyzed (e.g., `EXECUTE IMMEDIATE`, `CREATE PROCEDURE`). If a single dataset is provided, it will be treated as the default for prebuilt tools. |
 | useClientOAuth            |  string  |    false     | If set to `'true'`, forwards the client's OAuth access token from the default `Authorization` header. If set to a custom header name (e.g., `X-My-Auth`), that header will be used instead. An empty string or `'false'` disables this feature. Defaults to `""` (disabled). |
 | scopes                    | []string |    false     | A list of OAuth 2.0 scopes to use for the credentials. If not provided, default scopes are used.                                                                                                                                                                                                                                                                                                                                                                                                                     |
@@ -18070,17 +18118,17 @@ A `bigquery-execute-sql` tool executes a SQL statement against BigQuery.
 - **`dry_run`** (optional): If set to `true`, the query is validated but not
   run, returning information about the execution instead. Defaults to `false`.
 
-The behavior of this tool is influenced by the `writeMode` setting on its
-`bigquery` source:
+The behavior of this tool is influenced by the combination of the `readOnly`
+and `writeMode` settings on its `bigquery` source:
 
-- **`allowed` (default):** All SQL statements are permitted.
-- **`blocked`:** Only `SELECT` statements are allowed. Any other type of
-  statement (e.g., `INSERT`, `UPDATE`, `CREATE`) will be rejected.
-- **`protected`:** This mode enables session-based execution. `SELECT`
-  statements can be used on all tables, while write operations are allowed only
-  for the session's temporary dataset (e.g., `CREATE TEMP TABLE ...`). This
-  prevents modifications to permanent datasets while allowing stateful,
-  multi-step operations within a secure session.
+| `readOnly` | `writeMode` | Tool Behavior | MCP Tool Annotations |
+| :--- | :--- | :--- | :--- |
+| `false` *(default)* | `allowed` *(default)* | All SQL statements are permitted. | *(Default / none)* |
+| `true` | `blocked` *(default if `readOnly: true`)* | Only `SELECT` statements are allowed. Any other type of statement (e.g., `INSERT`, `UPDATE`, `CREATE`) will be rejected. | `readOnlyHint: true` |
+| `true` | `protected` | Enables session-based execution. `SELECT` statements can be used on all tables, while write operations are allowed only for the session's temporary dataset (e.g., `CREATE TEMP TABLE ...`). | `readOnlyHint: true` |
+
+> **Note:** Conflicting configurations, such as `readOnly: true` combined with
+> `writeMode: allowed`, are rejected during server startup.
 
 The tool's behavior is influenced by the `allowedDatasets` restriction on the
 `bigquery` source. Similar to `writeMode`, this setting provides an additional
@@ -18515,16 +18563,20 @@ description: Use this tool to find tables, views, models, routines or connection
 
 A `bigquery-sql` tool executes a pre-defined SQL statement.
 
-The behavior of this tool is influenced by the `writeMode` setting on its
-`bigquery` source:
+The behavior of this tool is influenced by the `readOnly` and `writeMode`
+settings on its `bigquery` source:
 
-- **`allowed` (default) and `blocked`:** These modes do not impose any
-  restrictions on the `bigquery-sql` tool. The pre-defined SQL statement will be
-  executed as-is.
-- **`protected`:** This mode enables session-based execution. The tool will
-  operate within the same BigQuery session as other tools using the same source,
-  allowing it to interact with temporary resources like `TEMP` tables created
-  within that session.
+- **Read-Only Mode:** When a source is configured with
+  `readOnly: true` (or `writeMode: blocked` / `writeMode: protected`),
+  `bigquery-sql` tools default to write-capable annotations (`readOnlyHint: false`)
+  and are automatically suppressed from registration during server startup to
+  protect data integrity and optimize agent context window. To keep a pre-defined
+  read-only query active in read-only mode, explicitly annotate the tool with
+  `readOnlyHint: true`.
+- **`protected`:** This mode enables session-based
+  execution. The tool will operate within the same BigQuery session as other
+  tools using the same source, allowing it to interact with temporary resources
+  like `TEMP` tables created within that session.
 
 ## Compatible Sources
 
@@ -19722,6 +19774,11 @@ In this section, we will download Toolbox, configure our tools in a
 *   **Environment Variables:**
     *   `BIGQUERY_PROJECT`: The GCP project ID.
     *   `BIGQUERY_LOCATION`: (Optional) The dataset location.
+    *   `BIGQUERY_READONLY`: (Optional) When set to `true`, enforces read-only
+        mode across all tools (defaults `BIGQUERY_WRITE_MODE` to `blocked`).
+        Defaults to `false`.
+    *   `BIGQUERY_WRITE_MODE`: (Optional) Controls write behavior: `allowed`,
+        `blocked` (strict read-only), or `protected` (session scratchpad).
     *   `BIGQUERY_USE_CLIENT_OAUTH`: (Optional) If `true`, forwards the client's
         OAuth access token for authentication. Defaults to `false`.
     *   `BIGQUERY_SCOPES`: (Optional) A comma-separated list of OAuth scopes to
@@ -23430,6 +23487,7 @@ useClientOAuth: true
 | type           |  string  |     true     | Must be "cloud-sql-admin".                                                                                                                     |
 | defaultProject |  string  |     false    | The Google Cloud project ID to use for Cloud SQL infrastructure tools.                                                                         |
 | useClientOAuth |  boolean |     false    | If true, the source will use client-side OAuth for authorization. Otherwise, it will use Application Default Credentials. Defaults to `false`. |
+| readOnly       |  boolean |     false    | When set to `true`, suppresses write-capable admin tools. Default: `false`.                                                                    |
 
 
 
@@ -24380,6 +24438,9 @@ your project's package manifest.
 ## Cloud SQL for MySQL Admin
 
 *   `--prebuilt` value: `cloud-sql-mysql-admin`
+*   **Environment Variables:**
+    *   `CLOUD_SQL_MYSQL_PROJECT`: (Optional) The GCP project ID to use as the default for Cloud SQL infrastructure tools.
+    *   `CLOUD_SQL_MYSQL_READONLY`: (Optional) When set to `true`, suppresses write-capable admin tools. Default: `false`.
 *   **Permissions:**
     *   **Cloud SQL Viewer** (`roles/cloudsql.viewer`): Provides read-only
         access to resources.
@@ -24426,6 +24487,9 @@ your project's package manifest.
 ## Cloud SQL for PostgreSQL Admin
 
 *   `--prebuilt` value: `cloud-sql-postgres-admin`
+*   **Environment Variables:**
+    *   `CLOUD_SQL_POSTGRES_PROJECT`: (Optional) The GCP project ID to use as the default for Cloud SQL infrastructure tools.
+    *   `CLOUD_SQL_POSTGRES_READONLY`: (Optional) When set to `true`, suppresses write-capable admin tools. Default: `false`.
 *   **Permissions:**
     *   **Cloud SQL Viewer** (`roles/cloudsql.viewer`): Provides read-only
         access to resources.
@@ -24658,6 +24722,7 @@ instead of hardcoding your secrets into the configuration file.
 | password  |  string  |    false     | Password of the MySQL user (e.g. "my-password"). Defaults to attempting IAM authentication if unspecified.              |
 | ipType    |  string  |    false     | IP Type of the Cloud SQL instance, must be either `public`,  `private`, or `psc`. Default: `public`.                    |
 | sqlCommenter | boolean |  false     | Overrides the global `--sql-commenter` flag for this source. When set, it takes priority; when omitted, the global flag applies. |
+| readOnly  | boolean  |    false     | When set to `true`, enforces read-only execution on the database connection (`read_only_connection:true`) and suppresses write-capable tools. Default: `false`. |
 
 
 
@@ -24702,8 +24767,8 @@ instead of hardcoding your secrets into the configuration file.
     *   `CLOUD_SQL_MYSQL_DATABASE`: The name of the database to connect to.
     *   `CLOUD_SQL_MYSQL_USER`: The database username.
     *   `CLOUD_SQL_MYSQL_PASSWORD`: The password for the database user.
-    *   `CLOUD_SQL_MYSQL_IP_TYPE`: The IP type i.e. "Public
-     or "Private" (Default: Public).
+    *   `CLOUD_SQL_MYSQL_IP_TYPE`: The IP type i.e. "Public" or "Private" (Default: Public).
+    *   `CLOUD_SQL_MYSQL_READONLY`: (Optional) When set to `true`, enforces read-only execution on the database connection (`read_only_connection:true`) and suppresses write-capable tools. Default: `false`.
 *   **Permissions:**
     *   **Cloud SQL Client** (`roles/cloudsql.client`) to connect to the
         instance.
@@ -24883,6 +24948,7 @@ The interface is identical, so there's no additional configuration required on t
 | password  |  string  |    false     | Password of the Postgres user (e.g. "my-password"). Defaults to attempting IAM authentication if unspecified.            |
 | ipType    |  string  |    false     | IP Type of the Cloud SQL instance; must be one of `public`, `private`, or `psc`. Default: `public`.                      |
 | sqlCommenter | boolean |  false     | Overrides the global `--sql-commenter` flag for this source. When set, it takes priority; when omitted, the global flag applies. |
+| readOnly  | boolean  |    false     | When set to `true`, enforces read-only execution at the database session level (`cloudsql_session_read_only=locked`) and suppresses write-capable tools. Default: `false`. |
 
 
 
@@ -25447,6 +25513,7 @@ description: "This tool modifies an existing vector specification (identified by
         user. Defaults to IAM authentication if unspecified.
     *   `CLOUD_SQL_POSTGRES_IP_TYPE`: (Optional) The IP type i.e. "Public" or
         "Private" (Default: Public).
+    *   `CLOUD_SQL_POSTGRES_READONLY`: (Optional) When set to `true`, enforces read-only execution at the database session level (`cloudsql_session_read_only=locked`) and suppresses write-capable tools. Default: `false`.
 *   **Permissions:**
     *   **Cloud SQL Client** (`roles/cloudsql.client`) to connect to the
         instance.
@@ -30559,6 +30626,510 @@ format: json
     *   `ELASTICSEARCH_APIKEY`: The API key for authentication.
 *   **Tools:**
     *   `execute_esql_query`: Use this tool to execute ES|QL queries.
+
+
+
+
+========================================================================
+## FalkorDB
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > FalkorDB
+**URL:** https://mcp-toolbox.dev/dev/integrations/falkordb/
+**Description:** None
+
+
+
+
+
+========================================================================
+## FalkorDB Source
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > FalkorDB > FalkorDB Source
+**URL:** https://mcp-toolbox.dev/dev/integrations/falkordb/source/
+**Description:** FalkorDB is a low-latency, open source graph database built for GenAI workloads
+
+
+
+## About
+
+[FalkorDB][falkordb-docs] is a low-latency graph database that speaks the
+openCypher query language over the Redis protocol. A single FalkorDB instance
+can host many independent graphs, and its native vector and full-text indexes
+make it a popular knowledge-graph backend for GenAI applications.
+
+The source connects to one instance and designates a default graph; tools can
+optionally target other graphs on the same instance.
+
+[falkordb-docs]: https://docs.falkordb.com/
+
+## Available Tools
+
+{{< list-tools >}}
+
+## Requirements
+
+### Database User
+
+FalkorDB instances without access control can be used with no credentials
+(e.g. a local `docker run -p 6379:6379 falkordb/falkordb` instance). For
+instances with authentication enabled, such as FalkorDB Cloud, provide the
+`username` and `password` fields, and enable `tls` for encrypted endpoints.
+
+## Example
+
+```yaml
+kind: source
+name: my-falkordb-source
+type: falkordb
+host: 127.0.0.1
+port: "6379"
+username: ${FALKORDB_USERNAME}
+password: ${FALKORDB_PASSWORD}
+graph: my_graph
+```
+
+{{< notice tip >}}
+Use environment variable replacement with the format ${ENV_NAME}
+instead of hardcoding your secrets into the configuration file.
+{{< /notice >}}
+
+## Reference
+
+| **field**      | **type** | **required** | **description**                                                                  |
+|----------------|:--------:|:------------:|----------------------------------------------------------------------------------|
+| type           |  string  |     true     | Must be "falkordb".                                                              |
+| host           |  string  |     true     | Host of the FalkorDB instance (e.g. "127.0.0.1").                                |
+| port           |  string  |     true     | Port of the FalkorDB instance (e.g. "6379").                                     |
+| username       |  string  |    false     | Name of the user to connect as, if authentication is enabled.                    |
+| password       |  string  |    false     | Password of the user, if authentication is enabled.                              |
+| graph          |  string  |     true     | Name of the default graph tools operate on (e.g. "my_graph").                    |
+| queryTimeoutMs |   int    |    false     | Per-query timeout in milliseconds. No timeout when unset.                        |
+| tls.enabled    |   bool   |    false     | Enable TLS for the connection. Defaults to false.                                |
+| tls.insecureSkipVerify | bool | false    | Skip server certificate verification (not recommended). Defaults to false.       |
+
+
+
+
+========================================================================
+## Tools
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > FalkorDB > Tools
+**URL:** https://mcp-toolbox.dev/dev/integrations/falkordb/tools/
+**Description:** None
+
+
+
+
+
+========================================================================
+## falkordb-cypher
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > FalkorDB > Tools > falkordb-cypher
+**URL:** https://mcp-toolbox.dev/dev/integrations/falkordb/tools/falkordb-cypher/
+**Description:** A "falkordb-cypher" tool executes a pre-defined Cypher statement against a FalkorDB graph.
+
+
+
+## About
+
+A `falkordb-cypher` tool executes a pre-defined Cypher statement against the
+graph configured on a FalkorDB source. The specified Cypher statement is
+executed as a [parameterized statement][falkordb-parameters], and specified
+parameters will be used according to their name: e.g. `$id`.
+
+> **Note:** This tool uses parameterized queries to prevent injections. Query
+> parameters can be used as substitutes for arbitrary expressions. Parameters
+> cannot be used as substitutes for identifiers, labels, relationship types,
+> or other parts of the query.
+
+[falkordb-parameters]: https://docs.falkordb.com/cypher/cypher_support.html
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Example
+
+```yaml
+kind: tool
+name: search_movies_by_actor
+type: falkordb-cypher
+source: my-falkordb-movies-instance
+statement: |
+  MATCH (m:Movie)<-[:ACTED_IN]-(p:Person)
+  WHERE p.name = $name AND m.year > $year
+  RETURN m.title, m.year
+  LIMIT 10
+description: |
+  Use this tool to get a list of movies for a specific actor and a given minimum release year.
+  Takes a full actor name, e.g. "Tom Hanks" and a year e.g 1993 and returns a list of movie titles and release years.
+parameters:
+  - name: name
+    type: string
+    description: Full name of the actor.
+  - name: year
+    type: integer
+    description: Minimum release year.
+```
+
+## Reference
+
+| **field**   |                  **type**                  | **required** | **description**                                                |
+|-------------|:------------------------------------------:|:------------:|----------------------------------------------------------------|
+| type        |                   string                   |     true     | Must be "falkordb-cypher".                                     |
+| source      |                   string                   |     true     | Name of the source the Cypher statement should execute on.     |
+| description |                   string                   |     true     | Description of the tool that is passed to the LLM.             |
+| statement   |                   string                   |     true     | Cypher statement to execute.                                   |
+| parameters  | [parameters](../../../documentation/configuration/tools/_index.md#specifying-parameters) |    false     | List of [parameters](../../../documentation/configuration/tools/_index.md#specifying-parameters) that will be used with the Cypher statement. |
+
+
+
+
+========================================================================
+## falkordb-execute-cypher
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > FalkorDB > Tools > falkordb-execute-cypher
+**URL:** https://mcp-toolbox.dev/dev/integrations/falkordb/tools/falkordb-execute-cypher/
+**Description:** A "falkordb-execute-cypher" tool executes an arbitrary Cypher query against a FalkorDB graph.
+
+
+
+## About
+
+A `falkordb-execute-cypher` tool executes a Cypher query provided by the
+calling agent against the graph configured on a FalkorDB source.
+
+When `readOnly` is set to `true`, queries are dispatched with FalkorDB's
+`GRAPH.RO_QUERY` command, so write operations are rejected by the database
+server itself rather than by client-side query inspection.
+
+When `allowGraphOverride` is set to `true`, the tool exposes an additional
+`graph` parameter that lets the agent target any graph on the instance
+instead of the source's default graph. Leave this off (the default) when the
+instance hosts graphs the agent should not reach.
+
+Setting the `dry_run` parameter to `true` returns the query's execution plan
+(via `GRAPH.EXPLAIN`) without running it.
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Example
+
+```yaml
+kind: tool
+name: execute_cypher
+type: falkordb-execute-cypher
+source: my-falkordb-instance
+description: Use this tool to execute a Cypher query against the graph.
+readOnly: true
+```
+
+## Reference
+
+| **field**          | **type** | **required** | **description**                                                                        |
+|--------------------|:--------:|:------------:|----------------------------------------------------------------------------------------|
+| type               |  string  |     true     | Must be "falkordb-execute-cypher".                                                     |
+| source             |  string  |     true     | Name of the source the Cypher query should execute on.                                 |
+| description        |  string  |     true     | Description of the tool that is passed to the LLM.                                     |
+| readOnly           |   bool   |    false     | Execute queries with GRAPH.RO_QUERY so the server rejects writes. Defaults to false.   |
+| allowGraphOverride |   bool   |    false     | Expose a `graph` parameter to target other graphs on the instance. Defaults to false.  |
+
+
+
+
+========================================================================
+## falkordb-schema
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > FalkorDB > Tools > falkordb-schema
+**URL:** https://mcp-toolbox.dev/dev/integrations/falkordb/tools/falkordb-schema/
+**Description:** A "falkordb-schema" tool extracts the schema of a FalkorDB graph.
+
+
+
+## About
+
+A `falkordb-schema` tool extracts a complete schema description of the graph
+configured on a FalkorDB source: node labels and relationship types with
+their observed property shapes (derived from sampling up to `sampleSize`
+entities per label or type, 100 by default), indexes (including vector and
+full-text indexes),
+constraints, and graph statistics.
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Example
+
+```yaml
+kind: tool
+name: get_schema
+type: falkordb-schema
+source: my-falkordb-instance
+description: Use this tool to get the schema of the graph.
+```
+
+## Output Format
+
+```json
+{
+  "graphInfo": {"name": "my_graph", "nodeCount": 2, "edgeCount": 1},
+  "nodeLabels": [
+    {"name": "Person", "count": 1, "properties": [{"name": "name", "types": ["STRING"]}]}
+  ],
+  "relationships": [
+    {"type": "ACTED_IN", "count": 1, "startNode": "Person", "endNode": "Movie", "properties": []}
+  ],
+  "indexes": [],
+  "constraints": [],
+  "statistics": {"totalNodes": 2, "totalRelationships": 1}
+}
+```
+
+## Reference
+
+| **field**          | **type** | **required** | **description**                                                       |
+|--------------------|:--------:|:------------:|-----------------------------------------------------------------------|
+| type               |  string  |     true     | Must be "falkordb-schema".                                            |
+| source             |  string  |     true     | Name of the source to extract the schema from.                        |
+| description        |  string  |     true     | Description of the tool that is passed to the LLM.                    |
+| sampleSize         |   int    |    false     | Entities sampled per label or type to derive property shapes. Defaults to 100. |
+
+
+
+
+========================================================================
+## falkordb-list-graphs
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > FalkorDB > Tools > falkordb-list-graphs
+**URL:** https://mcp-toolbox.dev/dev/integrations/falkordb/tools/falkordb-list-graphs/
+**Description:** A "falkordb-list-graphs" tool lists the graphs stored on a FalkorDB instance.
+
+
+
+## About
+
+A `falkordb-list-graphs` tool lists the names of all graphs stored on the
+FalkorDB instance of a source (via `GRAPH.LIST`). A FalkorDB instance can
+host many independent graphs, so this tool is typically paired with a
+`falkordb-execute-cypher` tool configured with `allowGraphOverride: true`.
+
+## Compatible Sources
+
+{{< compatible-sources >}}
+
+## Example
+
+```yaml
+kind: tool
+name: list_graphs
+type: falkordb-list-graphs
+source: my-falkordb-instance
+description: Use this tool to list the graphs stored on the instance.
+```
+
+## Output Format
+
+```json
+{"graphs": ["my_graph", "another_graph"]}
+```
+
+## Reference
+
+| **field**   | **type** | **required** | **description**                                     |
+|-------------|:--------:|:------------:|-----------------------------------------------------|
+| type        |  string  |     true     | Must be "falkordb-list-graphs".                     |
+| source      |  string  |     true     | Name of the source to list graphs from.             |
+| description |  string  |     true     | Description of the tool that is passed to the LLM.  |
+
+
+
+
+========================================================================
+## Samples
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > FalkorDB > Samples
+**URL:** https://mcp-toolbox.dev/dev/integrations/falkordb/samples/
+**Description:** None
+
+
+
+
+
+========================================================================
+## Quickstart (MCP with FalkorDB)
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > FalkorDB > Samples > Quickstart (MCP with FalkorDB)
+**URL:** https://mcp-toolbox.dev/dev/integrations/falkordb/samples/mcp_quickstart/
+**Description:** How to get started running Toolbox with MCP Inspector and FalkorDB as the source.
+
+
+
+## Overview
+
+[Model Context Protocol](https://modelcontextprotocol.io) is an open protocol
+that standardizes how applications provide context to LLMs. Check out this page
+on how to [connect to Toolbox via
+MCP](../../../documentation/connect-to/mcp-client/_index.md).
+
+## Step 1: Set up your FalkorDB graph and data
+
+In this section, you'll start a FalkorDB instance and populate it with sample
+data for a movies-related agent.
+
+1. **Start FalkorDB.** The quickest way is Docker:
+
+   ```bash
+   docker run -d --name falkordb -p 6379:6379 falkordb/falkordb
+   ```
+
+1. **Populate the graph with data.** Using `redis-cli` (or the FalkorDB
+   browser at `http://localhost:3000` if you expose it), create a small movie
+   graph:
+
+   ```bash
+   docker exec falkordb redis-cli GRAPH.QUERY movies "CREATE
+     (hanks:Person {name: 'Tom Hanks'}),
+     (ryan:Person {name: 'Meg Ryan'}),
+     (sleepless:Movie {title: 'Sleepless in Seattle', year: 1993}),
+     (gump:Movie {title: 'Forrest Gump', year: 1994}),
+     (hanks)-[:ACTED_IN]->(sleepless),
+     (hanks)-[:ACTED_IN]->(gump),
+     (ryan)-[:ACTED_IN]->(sleepless)"
+   ```
+
+## Step 2: Install and configure Toolbox
+
+In this section, we will download Toolbox and run the Toolbox server with a
+FalkorDB configuration.
+
+1. Download the latest version of Toolbox as a binary. Select the [correct
+   binary](https://github.com/googleapis/mcp-toolbox/releases) corresponding
+   to your OS and CPU architecture.
+
+1. Make the binary executable:
+
+   ```bash
+   chmod +x toolbox
+   ```
+
+1. Write the following into a `tools.yaml` file:
+
+   ```yaml
+   kind: source
+   name: falkordb-movies
+   type: falkordb
+   host: 127.0.0.1
+   port: "6379"
+   graph: movies
+   ---
+   kind: tool
+   name: search_movies_by_actor
+   type: falkordb-cypher
+   source: falkordb-movies
+   statement: |
+     MATCH (m:Movie)<-[:ACTED_IN]-(p:Person)
+     WHERE p.name = $name
+     RETURN m.title, m.year
+     LIMIT 10
+   description: Use this tool to list the movies a given actor acted in.
+   parameters:
+     - name: name
+       type: string
+       description: Full name of the actor.
+   ---
+   kind: tool
+   name: execute_cypher
+   type: falkordb-execute-cypher
+   source: falkordb-movies
+   description: Use this tool to execute a Cypher query against the movie graph.
+   ---
+   kind: tool
+   name: get_schema
+   type: falkordb-schema
+   source: falkordb-movies
+   description: Use this tool to get the schema of the movie graph.
+   ```
+
+1. Start the Toolbox server:
+
+   ```bash
+   ./toolbox --tools-file "tools.yaml"
+   ```
+
+## Step 3: Connect to MCP Inspector
+
+1. Run the MCP Inspector:
+
+   ```bash
+   npx @modelcontextprotocol/inspector
+   ```
+
+1. Type `y` when it asks to install the inspector package.
+
+1. It should show the following when the MCP Inspector is up and running:
+
+   ```bash
+   MCP Inspector is up and running at http://127.0.0.1:6274
+   ```
+
+1. Open the above link in your browser.
+
+1. For `Transport Type`, select `Streamable HTTP`.
+
+1. For `URL`, type in `http://127.0.0.1:5000/mcp`.
+
+1. Click the `Connect` button.
+
+1. Click `List Tools` — you should see the `search_movies_by_actor`,
+   `execute_cypher`, and `get_schema` tools. Select one and try it out: ask
+   for Tom Hanks' movies, run an ad-hoc Cypher query, or fetch the graph
+   schema.
+
+
+
+
+========================================================================
+## Prebuilt Configs
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > FalkorDB > Prebuilt Configs
+**URL:** https://mcp-toolbox.dev/dev/integrations/falkordb/prebuilt-configs/
+**Description:** Prebuilt configurations for FalkorDB.
+
+
+
+
+
+========================================================================
+## FalkorDB
+========================================================================
+**Hierarchy:** MCP Toolbox for Databases > Integrations > FalkorDB > Prebuilt Configs > FalkorDB
+**URL:** https://mcp-toolbox.dev/dev/integrations/falkordb/prebuilt-configs/falkordb/
+**Description:** Details of the FalkorDB prebuilt configuration.
+
+
+## FalkorDB
+
+*   `--prebuilt` value: `falkordb`
+*   **Environment Variables:**
+    *   `FALKORDB_HOST`: The host of the FalkorDB instance (e.g.,
+        `127.0.0.1`).
+    *   `FALKORDB_PORT`: The port of the FalkorDB instance (defaults to
+        `6379`).
+    *   `FALKORDB_GRAPH`: The name of the graph to operate on.
+    *   `FALKORDB_USERNAME`: The username for the FalkorDB instance
+        (optional).
+    *   `FALKORDB_PASSWORD`: The password for the FalkorDB instance
+        (optional).
+*   **Permissions:**
+    *   **Database-level permissions** are required to execute Cypher
+        queries.
+*   **Tools:**
+    *   `execute_cypher`: Executes a Cypher query against the graph.
+    *   `get_schema`: Retrieves the schema of the graph.
+    *   `list_graphs`: Lists the graphs stored on the instance.
 
 
 
@@ -39845,7 +40416,7 @@ In this section, we will download Toolbox and run the Toolbox server.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, windows/amd64, or windows/arm64
-    curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.9.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.10.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -40006,7 +40577,7 @@ In this section, we will download Toolbox and run the Toolbox server.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, windows/amd64, or windows/arm64
-    curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.9.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.10.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -40129,7 +40700,7 @@ In this section, we will download Toolbox and run the Toolbox server.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, windows/amd64, or windows/arm64
-    curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.9.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/mcp-toolbox-for-databases/v1.10.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
